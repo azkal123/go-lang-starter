@@ -89,6 +89,19 @@ func (r *testUserRepository) GetWithRolesAndDormitories(ctx context.Context, id 
 	return &user, nil
 }
 
+func (r *testUserRepository) AssignRole(ctx context.Context, userID, roleID uuid.UUID) error {
+	return r.db.WithContext(ctx).Create(&entity.UserRole{
+		UserID: userID,
+		RoleID: roleID,
+	}).Error
+}
+
+func (r *testUserRepository) RemoveRole(ctx context.Context, userID, roleID uuid.UUID) error {
+	return r.db.WithContext(ctx).
+		Where("user_id = ? AND role_id = ?", userID, roleID).
+		Delete(&entity.UserRole{}).Error
+}
+
 func setupTestRouter(t *testing.T) (*gin.Engine, func()) {
 	gin.SetMode(gin.TestMode)
 
@@ -104,6 +117,7 @@ func setupTestRouter(t *testing.T) (*gin.Engine, func()) {
 	userRepo := &testUserRepository{db: testDB}
 	roleRepo := infraRepo.NewRoleRepository() // These will use database.DB
 	dormitoryRepo := infraRepo.NewDormitoryRepository()
+	permissionRepo := infraRepo.NewPermissionRepository()
 
 	// Initialize services
 	tokenService := infraService.NewJWTService()
@@ -112,17 +126,19 @@ func setupTestRouter(t *testing.T) (*gin.Engine, func()) {
 	authUseCase := usecase.NewAuthUseCase(userRepo, tokenService)
 	userUseCase := usecase.NewUserUseCase(userRepo, roleRepo)
 	dormitoryUseCase := usecase.NewDormitoryUseCase(dormitoryRepo, userRepo)
+	roleUseCase := usecase.NewRoleUseCase(roleRepo, permissionRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authUseCase)
 	userHandler := handler.NewUserHandler(userUseCase)
 	dormitoryHandler := handler.NewDormitoryHandler(dormitoryUseCase)
+	roleHandler := handler.NewRoleHandler(roleUseCase)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(tokenService, userRepo)
 
 	// Setup router
-	r := router.SetupRouter(authHandler, userHandler, dormitoryHandler, authMiddleware)
+	r := router.SetupRouter(authHandler, userHandler, dormitoryHandler, roleHandler, authMiddleware)
 
 	cleanup := func() {
 		database.DB = originalDB // Restore original DB

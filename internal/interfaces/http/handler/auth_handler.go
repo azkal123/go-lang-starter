@@ -1,20 +1,28 @@
 package handler
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/your-org/go-backend-starter/internal/application/dto"
-	"github.com/your-org/go-backend-starter/internal/application/usecase"
 	domainErrors "github.com/your-org/go-backend-starter/internal/domain/errors"
 	"github.com/your-org/go-backend-starter/internal/interfaces/http/response"
 )
 
+// AuthUseCase defines the methods required by AuthHandler
+type AuthUseCase interface {
+	Register(ctx context.Context, req dto.RegisterRequest) (*dto.AuthResponse, error)
+	Login(ctx context.Context, req dto.LoginRequest) (*dto.AuthResponse, error)
+	RefreshToken(ctx context.Context, req dto.RefreshTokenRequest) (*dto.AuthResponse, error)
+}
+
 // AuthHandler handles authentication requests
 type AuthHandler struct {
-	authUseCase *usecase.AuthUseCase
+	authUseCase AuthUseCase
 }
 
 // NewAuthHandler creates a new auth handler
-func NewAuthHandler(authUseCase *usecase.AuthUseCase) *AuthHandler {
+func NewAuthHandler(authUseCase AuthUseCase) *AuthHandler {
 	return &AuthHandler{
 		authUseCase: authUseCase,
 	}
@@ -38,7 +46,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-		resp, err := h.authUseCase.Register(c.Request.Context(), req)
+	resp, err := h.authUseCase.Register(c.Request.Context(), req)
 	if err != nil {
 		switch err {
 		case domainErrors.ErrUserAlreadyExists:
@@ -70,7 +78,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-		resp, err := h.authUseCase.Login(c.Request.Context(), req)
+	resp, err := h.authUseCase.Login(c.Request.Context(), req)
 	if err != nil {
 		switch err {
 		case domainErrors.ErrInvalidCredentials, domainErrors.ErrUserInactive:
@@ -102,7 +110,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-		resp, err := h.authUseCase.RefreshToken(c.Request.Context(), req)
+	resp, err := h.authUseCase.RefreshToken(c.Request.Context(), req)
 	if err != nil {
 		switch err {
 		case domainErrors.ErrInvalidToken, domainErrors.ErrTokenExpired:

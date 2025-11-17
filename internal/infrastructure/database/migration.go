@@ -50,7 +50,14 @@ func GetMigrations() []MigrationStep {
 
 // EnsureMigrationTable ensures the migration tracking table exists
 func EnsureMigrationTable(db *gorm.DB) error {
-	return db.AutoMigrate(&Migration{})
+	// Check if the schema_migrations table already exists to avoid issues when running
+	// migrations multiple times or when the table was created with a different schema.
+	if db.Migrator().HasTable(&Migration{}) {
+		return nil
+	}
+
+	// Create the migration tracking table if it does not exist.
+	return db.Migrator().CreateTable(&Migration{})
 }
 
 // GetAppliedMigrations returns all applied migrations
@@ -222,9 +229,9 @@ func GetMigrationStatus(db *gorm.DB) ([]map[string]interface{}, error) {
 	var status []map[string]interface{}
 	for _, migration := range migrations {
 		status = append(status, map[string]interface{}{
-			"version":   migration.Version,
-			"name":      migration.Name,
-			"applied":   applied[migration.Version],
+			"version": migration.Version,
+			"name":    migration.Name,
+			"applied": applied[migration.Version],
 		})
 	}
 
