@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/your-org/go-backend-starter/internal/domain/entity"
-	"github.com/your-org/go-backend-starter/internal/infrastructure/database"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
