@@ -1,130 +1,329 @@
+# Go Backend Starter - Hexagonal Architecture
 
+Aplikasi backend starter berbasis **Golang** dengan **Clean Architecture / Hexagonal Architecture** yang mendukung skalabilitas, maintainability, dan pemisahan concern yang jelas antara domain, aplikasi, dan infrastruktur.
 
-## **Rangkuman Starter Project Backend Go (Hexagonal Architecture)**
+## 🚀 Fitur Utama
 
-Starter project ini menyediakan fondasi backend berbasis **Golang** dengan **Clean Architecture / Hexagonal Architecture** yang mendukung skalabilitas, maintainability, dan pemisahan concern yang jelas antara domain, aplikasi, dan infrastruktur. Proyek ini ditujukan untuk sistem yang memiliki otentikasi JWT, manajemen user, dan entitas dormitory dengan pengaturan izin akses yang fleksibel.
+### 1. Authentication & Authorization
+- ✅ JWT Authentication (Access Token & Refresh Token)
+- ✅ User Registration & Login
+- ✅ Refresh Token Endpoint
+- ✅ Middleware JWT untuk proteksi endpoint
 
----
+### 2. Role & Permission System
+- ✅ Role-based dan Permission-based authorization
+- ✅ Contoh permission: `user:read`, `user:update`, `dorm:read`, `dorm:update`
+- ✅ Role dapat memiliki banyak permission
+- ✅ User dapat memiliki satu atau lebih role
 
-## **Fitur Utama**
+### 3. User Management (CRUD Users)
+- ✅ Create, Read, Update, Delete user
+- ✅ Pagination support
+- ✅ Role assignment
 
-### **1. Authentication & Authorization**
+### 4. Dormitory Management (CRUD Dormitory)
+- ✅ CRUD untuk data dormitory
+- ✅ Setiap dormitory dapat dibatasi akses berdasarkan guard
 
-* **JWT Authentication**
+### 5. Guard / Access Control
+- ✅ Guard menentukan batas akses user terhadap dormitory:
+  - **Access to specific dormitories only** — staff hanya dapat mengelola dormitory tertentu
+  - **Access to all dormitories** — admin dapat mengelola seluruh dormitory
 
-  * Access Token
-  * Refresh Token
-* **Registrasi dan Login User**
-* **Refresh Token Endpoint**
-* Middleware verifikasi JWT untuk melindungi endpoint.
+## 📁 Struktur Project (Hexagonal Architecture)
 
-### **2. Role & Permission System**
+```
+.
+├── cmd/
+│   ├── main.go              # Entry point aplikasi
+│   └── seed/
+│       └── main.go          # Seed data untuk development
+├── internal/
+│   ├── domain/              # Domain Layer (Core Business Logic)
+│   │   ├── entity/          # Domain entities
+│   │   ├── repository/      # Repository interfaces (ports)
+│   │   ├── service/         # Domain service interfaces
+│   │   └── errors/          # Domain errors
+│   ├── application/         # Application Layer (Use Cases)
+│   │   ├── usecase/         # Business use cases
+│   │   └── dto/             # Data Transfer Objects
+│   ├── infrastructure/      # Infrastructure Layer (Adapters)
+│   │   ├── database/        # Database connection & migration
+│   │   ├── repository/      # Repository implementations
+│   │   └── service/         # Service implementations (JWT, etc)
+│   └── interfaces/          # Interface/Delivery Layer
+│       └── http/
+│           ├── handler/     # HTTP handlers
+│           ├── middleware/  # HTTP middleware
+│           └── router/       # Route configuration
+├── go.mod
+├── go.sum
+├── .env.example
+├── Makefile
+└── README.md
+```
 
-* Mendukung role-based dan permission-based authorization.
-* Contoh permission:
+## 🏗️ Arsitektur Clean (Hexagonal Architecture)
 
-  * `user:read`
-  * `user:update`
-  * `dorm:read`
-  * `dorm:update`
-* Role dapat memiliki banyak permission.
-* User dapat memiliki satu atau lebih role.
+### **1. Domain Layer**
+Berisi **entity**, **value object**, **domain service**, dan **business rules**.
+- `User`, `Role`, `Permission`, `Dormitory`
+- Tidak bergantung pada database atau framework
 
-### **3. User Management (CRUD Users)**
+### **2. Application Layer (Use Cases)**
+Berisi **service/use case** seperti:
+- `RegisterUser`, `LoginUser`, `RefreshToken`
+- `CreateDormitory`, `UpdateDormitory`, dll.
+- Menggunakan **interface repository** (port) yang diimplementasikan di infrastruktur
 
-* Create, Read, Update, Delete user untuk admin.
-* Pemisahan antara profile user pribadi vs admin management.
+### **3. Infrastructure Layer (Adapters)**
+Implementasi repository dan service:
+- PostgreSQL repository (GORM)
+- JWT token service
+- Database connection
 
-### **4. Dormitory Management (CRUD Dormitory)**
+### **4. Interface/Delivery Layer**
+Controller/handler HTTP:
+- JWT Auth middleware
+- Permission checker middleware
+- Dormitory guard middleware
+- Mapping request/response ke DTO
 
-* CRUD untuk data dormitory.
-* Setiap dormitory dapat dibatasi akses berdasarkan guard.
+## 🔐 Flow Authorization
 
-### **5. Guard / Access Control**
-
-* Guard menentukan batas akses user terhadap dormitory:
-
-  * **Access to specific dormitories only** — misal staff hanya dapat mengelola dormitory tertentu.
-  * **Access to all dormitories** — misal admin pusat dapat membaca/mengelola seluruh dormitory.
-* Guard bekerja berdasarkan ID dormitory yang terasosiasi ke user atau role.
-
----
-
-## **Arsitektur Clean (Hexagonal Architecture)**
-
-Struktur mengikuti prinsip **ports & adapters** agar mudah diuji, scalable, dan bebas ketergantungan dari framework.
-
-### **Lapisan Utama**
-
-#### **1. Domain Layer**
-
-* Berisi **entity**, **value object**, **domain service**, dan **business rules**.
-* Contoh entity:
-
-  * `User`
-  * `Role`
-  * `Permission`
-  * `Dormitory`
-* Tidak bergantung pada database atau framework.
-
-#### **2. Application Layer (Use Cases)**
-
-* Berisi **service/use case** seperti:
-
-  * `RegisterUser`
-  * `LoginUser`
-  * `RefreshToken`
-  * `CreateDormitory`, `UpdateDormitory`, dll.
-  * `AssignRoleToUser`
-* Menggunakan **interface repository** (port) yang diimplementasikan di infrastruktur.
-* Mengatur flow bisnis tetapi tidak tahu detail teknologi.
-
-#### **3. Infrastructure Layer (Adapters)**
-
-* Implementasi repository, misalnya:
-
-  * PostgreSQL / MySQL / MongoDB repository
-  * Token provider JWT
-* Router/HTTP adapter (Fiber, Gin, Echo, atau standard net/http)
-
-#### **4. Interface/Delivery Layer**
-
-* Controller/handler HTTP
-* Middleware:
-
-  * JWT Auth
-  * Permission checker
-  * Dormitory guard
-* Mapping antara request/response ke DTO.
-
----
-
-## **Flow Authorization**
-
-1. Request masuk → Middleware cek JWT.
-2. Middleware cek **role & permission** sesuai endpoint.
+1. Request masuk → Middleware cek JWT
+2. Middleware cek **role & permission** sesuai endpoint
 3. Jika endpoint terkait dormitory → Guard cek:
+   - User memiliki akses ke dormitory id tertentu
+   - atau user memiliki akses global (admin/super_admin)
+4. Jika lolos → dilanjutkan ke handler
 
-   * User memiliki akses ke dormitory id tertentu
-   * atau user memiliki akses global (“ALL_DORM_ACCESS”)
-4. Jika lolos → dilanjutkan ke handler.
+## 📋 Prerequisites
+
+- Go 1.21 atau lebih tinggi
+- PostgreSQL 12 atau lebih tinggi
+- Make (optional, untuk menggunakan Makefile)
+
+## 🛠️ Installation
+
+### 1. Clone Repository
+```bash
+git clone <repository-url>
+cd go-backend-starter
+```
+
+### 2. Install Dependencies
+```bash
+go mod download
+```
+
+### 3. Setup Environment Variables
+```bash
+cp .env.example .env
+```
+
+Edit `.env` file:
+```env
+# Server Configuration
+SERVER_PORT=8080
+SERVER_HOST=localhost
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=go_backend_db
+DB_SSLMODE=disable
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_ACCESS_TOKEN_EXPIRY=15m
+JWT_REFRESH_TOKEN_EXPIRY=168h
+
+# Application
+APP_ENV=development
+LOG_LEVEL=debug
+```
+
+### 4. Setup Database
+```bash
+# Create PostgreSQL database
+createdb go_backend_db
+```
+
+### 5. Run Migrations
+Migrations akan berjalan otomatis saat aplikasi start, atau bisa dijalankan manual:
+```bash
+go run cmd/main.go
+```
+
+### 6. Seed Data (Optional)
+```bash
+go run cmd/seed/main.go
+```
+
+Ini akan membuat:
+- Permissions: `user:read`, `user:create`, `user:update`, `user:delete`, `dorm:read`, `dorm:create`, `dorm:update`, `dorm:delete`
+- Roles: `admin`, `staff`, `user`
+- Admin user: `admin@example.com` / `admin123`
+- Sample dormitories
+
+### 7. Run Application
+```bash
+# Using Make
+make run
+
+# Or directly
+go run cmd/main.go
+```
+
+Server akan berjalan di `http://localhost:8080`
+
+## 📡 API Endpoints
+
+### Authentication (Public)
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/refresh` - Refresh access token
+
+### Users (Protected)
+- `GET /api/users` - List users (with pagination)
+- `GET /api/users/:id` - Get user by ID
+- `POST /api/users` - Create user (requires `user:create` permission)
+- `PUT /api/users/:id` - Update user (requires `user:update` permission)
+- `DELETE /api/users/:id` - Delete user (requires `user:delete` permission)
+
+### Dormitories (Protected)
+- `GET /api/dormitories` - List dormitories (with pagination)
+- `GET /api/dormitories/:id` - Get dormitory by ID (requires dormitory access)
+- `POST /api/dormitories` - Create dormitory (requires `dorm:create` permission)
+- `PUT /api/dormitories/:id` - Update dormitory (requires dormitory access + `dorm:update` permission)
+- `DELETE /api/dormitories/:id` - Delete dormitory (requires dormitory access + `dorm:delete` permission)
+
+### Health Check
+- `GET /health` - Health check endpoint
+
+## 🔑 Authentication
+
+### Register
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "password123",
+    "name": "John Doe"
+  }'
+```
+
+### Login
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "admin123"
+  }'
+```
+
+Response:
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_at": "2024-01-01T12:15:00Z",
+  "user": {
+    "id": "uuid",
+    "email": "admin@example.com",
+    "name": "Admin User",
+    "roles": ["admin"]
+  }
+}
+```
+
+### Using Access Token
+```bash
+curl -X GET http://localhost:8080/api/users \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+## 🎯 Permission System
+
+### Default Permissions
+- `user:read` - Read users
+- `user:create` - Create users
+- `user:update` - Update users
+- `user:delete` - Delete users
+- `dorm:read` - Read dormitories
+- `dorm:create` - Create dormitories
+- `dorm:update` - Update dormitories
+- `dorm:delete` - Delete dormitories
+
+### Default Roles
+- **admin** - Has all permissions
+- **staff** - Has `user:read`, `dorm:read`, `dorm:update`
+- **user** - Has `dorm:read` only
+
+## 🛡️ Guard System
+
+Guard system mengontrol akses user ke dormitory tertentu:
+
+1. **Admin/Super Admin** - Dapat mengakses semua dormitory
+2. **Staff/User dengan assignment** - Hanya dapat mengakses dormitory yang di-assign ke mereka
+
+Untuk assign dormitory ke user, gunakan endpoint:
+```bash
+# Assign dormitory to user (via database atau buat endpoint khusus)
+```
+
+## 🧪 Testing
+
+```bash
+# Run tests
+make test
+
+# Or
+go test ./...
+```
+
+## 📦 Build
+
+```bash
+# Build binary
+make build
+
+# Output akan di bin/server
+```
+
+## 🔧 Development
+
+### Project Structure Best Practices
+- **Domain Layer**: Pure business logic, no dependencies
+- **Application Layer**: Use cases, depends only on domain
+- **Infrastructure Layer**: External concerns (DB, HTTP, etc.)
+- **Interface Layer**: HTTP handlers, depends on application layer
+
+### Adding New Features
+1. Define entity in `internal/domain/entity/`
+2. Create repository interface in `internal/domain/repository/`
+3. Implement repository in `internal/infrastructure/repository/`
+4. Create use case in `internal/application/usecase/`
+5. Create handler in `internal/interfaces/http/handler/`
+6. Add routes in `internal/interfaces/http/router/router.go`
+
+## 📝 License
+
+MIT License
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📧 Support
+
+Untuk pertanyaan atau support, silakan buat issue di repository ini.
 
 ---
 
-## **Keunggulan Desain**
-
-* **Modular & scalable** → logic aplikasi terpisah dari detail teknis.
-* **Testable** → domain dan application layer mudah untuk unit testing.
-* **Maintainable** → perubahan pada database, framework, atau library JWT tidak mempengaruhi domain/application.
-* **Flexible authorization** melalui kombinasi **role, permission, dan guard**.
-
----
-
-Jika Anda ingin, saya dapat bantu:
-
-✅ buatkan struktur folder lengkap
-✅ buatkan blueprint kode (handler, use case, repository interface, entity)
-✅ buatkan contoh implementasi JWT + middleware authorization
-✅ buatkan ERD atau schema database
-
-Tinggal beri tahu!
+**Happy Coding! 🚀**
