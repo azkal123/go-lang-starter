@@ -2,11 +2,14 @@ package handler
 
 import (
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/your-org/go-backend-starter/internal/application/dto"
 	"github.com/your-org/go-backend-starter/internal/application/usecase"
+	"github.com/your-org/go-backend-starter/internal/domain/entity"
 	domainErrors "github.com/your-org/go-backend-starter/internal/domain/errors"
 	"github.com/your-org/go-backend-starter/internal/interfaces/http/response"
 )
@@ -21,6 +24,64 @@ func NewUserHandler(userUseCase *usecase.UserUseCase) *UserHandler {
 	return &UserHandler{
 		userUseCase: userUseCase,
 	}
+}
+
+// Me returns the currently authenticated user from context
+func (h *UserHandler) Me(c *gin.Context) {
+	userVal, exists := c.Get("user")
+	if !exists {
+		response.ErrorUnauthorized(c, "User not found in context")
+		return
+	}
+
+	userEntity, ok := userVal.(*entity.User)
+	if !ok {
+		response.ErrorInternalServer(c, "Invalid user type")
+		return
+	}
+
+	roles := make([]string, 0, len(userEntity.Roles))
+	permissions := make([]string, 0)
+	isAdminAllDorms := false
+	for _, r := range userEntity.Roles {
+		roles = append(roles, r.Name)
+		// Use slug/name case-insensitively to detect admin and super_admin
+		if strings.EqualFold(r.Slug, "admin") || strings.EqualFold(r.Slug, "super_admin") ||
+			strings.EqualFold(r.Name, "admin") || strings.EqualFold(r.Name, "super_admin") {
+			isAdminAllDorms = true
+		}
+		for _, p := range r.Permissions {
+			permissions = append(permissions, p.Name)
+		}
+	}
+
+	dorms := make([]dto.UserDormitorySummary, 0, len(userEntity.Dormitories))
+	for _, d := range userEntity.Dormitories {
+		dorms = append(dorms, dto.UserDormitorySummary{
+			ID:   d.ID.String(),
+			Name: d.Name,
+		})
+	}
+	if isAdminAllDorms {
+		dorms = append(dorms, dto.UserDormitorySummary{
+			ID:   "*",
+			Name: "All dormitories",
+		})
+	}
+
+	resp := dto.UserResponse{
+		ID:          userEntity.ID.String(),
+		Email:       userEntity.Email,
+		Name:        userEntity.Name,
+		IsActive:    userEntity.IsActive,
+		Roles:       roles,
+		Permissions: permissions,
+		Dormitories: dorms,
+		CreatedAt:   userEntity.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:   userEntity.UpdatedAt.Format(time.RFC3339),
+	}
+
+	response.SuccessOK(c, resp, "Current user retrieved successfully")
 }
 
 // CreateUser handles user creation

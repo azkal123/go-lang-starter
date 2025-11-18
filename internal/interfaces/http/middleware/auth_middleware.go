@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -89,13 +90,8 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 // RequirePermission is a middleware that requires specific permission
 func (m *AuthMiddleware) RequirePermission(permission string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// First check auth
-		m.RequireAuth()(c)
-		if c.IsAborted() {
-			return
-		}
-
-		// Get user from context
+		// RequireAuth should already have run for this route (protected group).
+		// We only rely on the user that was set in the context by RequireAuth.
 		user, exists := c.Get("user")
 		if !exists {
 			response.ErrorUnauthorized(c, "User not found in context")
@@ -116,6 +112,8 @@ func (m *AuthMiddleware) RequirePermission(permission string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		log.Printf("RequirePermission: user=%s checking=%s", userEntity.Email, permission)
 
 		c.Next()
 	}

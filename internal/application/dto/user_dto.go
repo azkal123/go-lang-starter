@@ -18,15 +18,23 @@ type UpdateUserRequest struct {
 	RoleIDs  []string `json:"role_ids,omitempty"`
 }
 
+// UserDormitorySummary represents a simple dormitory view for user responses
+type UserDormitorySummary struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 // UserResponse represents user data in responses
 type UserResponse struct {
-	ID        string   `json:"id"`
-	Email     string   `json:"email"`
-	Name      string   `json:"name"`
-	IsActive  bool     `json:"is_active"`
-	Roles     []string `json:"roles,omitempty"`
-	CreatedAt string   `json:"created_at"`
-	UpdatedAt string   `json:"updated_at"`
+	ID          string                 `json:"id"`
+	Email       string                 `json:"email"`
+	Name        string                 `json:"name"`
+	IsActive    bool                   `json:"is_active"`
+	Roles       []string               `json:"roles,omitempty"`
+	Permissions []string               `json:"permissions,omitempty"`
+	Dormitories []UserDormitorySummary `json:"dormitories"`
+	CreatedAt   string                 `json:"created_at"`
+	UpdatedAt   string                 `json:"updated_at"`
 }
 
 // ListUsersResponse represents paginated user list response

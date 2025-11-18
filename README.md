@@ -243,6 +243,9 @@ Server akan berjalan di `http://localhost:8080`
 - `POST /api/users/:id/roles` - Assign role to user (requires `user:update` permission)
 - `DELETE /api/users/:id/roles/:role_id` - Remove role from user (requires `user:update` permission)
 
+### Current User (Protected)
+- `GET /api/me` - Get current authenticated user (requires valid access token)
+
 ### Roles (Protected)
 - `GET /api/roles` - List roles (with pagination, requires `role:read` permission)
 - `GET /api/roles/:id` - Get role by ID (requires `role:read` permission)
@@ -299,6 +302,31 @@ curl -X POST http://localhost:8080/api/auth/register \
       "name": "John Doe",
       "roles": ["user"]
     }
+  }
+}
+```
+
+#### Get Current User
+
+```bash
+curl -X GET http://localhost:8080/api/me \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+**Response 200:**
+
+```json
+{
+  "success": true,
+  "message": "Current user retrieved successfully",
+  "data": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "is_active": true,
+    "roles": ["user"],
+    "created_at": "2025-11-18T06:04:28+07:00",
+    "updated_at": "2025-11-18T06:04:28+07:00"
   }
 }
 ```

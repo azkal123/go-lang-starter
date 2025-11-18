@@ -52,6 +52,9 @@ func SetupRouter(
 		protected := api.Group("")
 		protected.Use(authMiddleware.RequireAuth())
 		{
+			// Current user
+			protected.GET("/me", userHandler.Me)
+
 			// User routes
 			users := protected.Group("/users")
 			{
