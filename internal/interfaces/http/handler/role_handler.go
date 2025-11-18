@@ -27,7 +27,7 @@ func NewRoleHandler(roleUseCase *usecase.RoleUseCase) *RoleHandler {
 func (h *RoleHandler) CreateRole(c *gin.Context) {
 	var req dto.CreateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorBadRequest(c, "Invalid request body", err.Error())
+		response.ErrorValidation(c, err)
 		return
 	}
 
@@ -79,7 +79,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 
 	var req dto.UpdateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorBadRequest(c, "Invalid request body", err.Error())
+		response.ErrorValidation(c, err)
 		return
 	}
 

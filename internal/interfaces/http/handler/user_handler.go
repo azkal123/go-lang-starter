@@ -39,7 +39,7 @@ func NewUserHandler(userUseCase *usecase.UserUseCase) *UserHandler {
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req dto.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorBadRequest(c, "Invalid request body", err.Error())
+		response.ErrorValidation(c, err)
 		return
 	}
 
@@ -114,7 +114,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 	var req dto.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorBadRequest(c, "Invalid request body", err.Error())
+		response.ErrorValidation(c, err)
 		return
 	}
 

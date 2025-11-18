@@ -42,7 +42,7 @@ func NewAuthHandler(authUseCase AuthUseCase) *AuthHandler {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorBadRequest(c, "Invalid request body", err.Error())
+		response.ErrorValidation(c, err)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorBadRequest(c, "Invalid request body", err.Error())
+		response.ErrorValidation(c, err)
 		return
 	}
 

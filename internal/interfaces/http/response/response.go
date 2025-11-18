@@ -1,9 +1,13 @@
 package response
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 // SuccessResponse represents a standardized success response
@@ -18,6 +22,20 @@ type ErrorResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 	Error   string `json:"error,omitempty"`
+}
+
+// FieldError represents a single field validation error
+type FieldError struct {
+	Field   string `json:"field"`
+	Rule    string `json:"rule"`
+	Message string `json:"message"`
+}
+
+// ValidationErrorResponse represents a standardized validation error response
+type ValidationErrorResponse struct {
+	Success bool         `json:"success"`
+	Message string       `json:"message"`
+	Errors  []FieldError `json:"errors"`
 }
 
 // Success sends a standardized success response
@@ -69,6 +87,47 @@ func ErrorBadRequest(c *gin.Context, message string, errorDetail ...string) {
 		message = "Bad request"
 	}
 	Error(c, http.StatusBadRequest, message, errorDetail...)
+}
+
+// ErrorValidation sends a 400 Bad Request response with structured validation errors
+func ErrorValidation(c *gin.Context, err error) {
+	var verrs validator.ValidationErrors
+	if errors.As(err, &verrs) {
+		fieldErrors := make([]FieldError, 0, len(verrs))
+		for _, fe := range verrs {
+			field := fe.Field()
+			field = strings.TrimPrefix(field, "Create")
+			field = strings.TrimPrefix(field, "Update")
+			field = strings.TrimPrefix(field, "Register")
+			field = strings.TrimPrefix(field, "Login")
+			field = strings.TrimPrefix(field, "Request")
+			field = strings.TrimPrefix(field, "Role")
+			field = strings.TrimPrefix(field, "User")
+			field = strings.TrimPrefix(field, "Dormitory")
+			field = strings.TrimPrefix(field, "Permission")
+			field = strings.TrimPrefix(field, "Location")
+			field = strings.TrimPrefix(field, "DTO")
+			field = strings.TrimPrefix(field, ".")
+			field = strings.ToLower(field)
+
+			message := fmt.Sprintf("%s is %s", field, fe.Tag())
+			fieldErrors = append(fieldErrors, FieldError{
+				Field:   field,
+				Rule:    fe.Tag(),
+				Message: message,
+			})
+		}
+
+		c.JSON(http.StatusBadRequest, ValidationErrorResponse{
+			Success: false,
+			Message: "Validation failed",
+			Errors:  fieldErrors,
+		})
+		return
+	}
+
+	// Fallback to generic bad request if it's not a validation error
+	ErrorBadRequest(c, "Invalid request body", err.Error())
 }
 
 // ErrorUnauthorized sends a 401 Unauthorized error response

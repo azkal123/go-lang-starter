@@ -38,7 +38,7 @@ func NewDormitoryHandler(dormitoryUseCase *usecase.DormitoryUseCase) *DormitoryH
 func (h *DormitoryHandler) CreateDormitory(c *gin.Context) {
 	var req dto.CreateDormitoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorBadRequest(c, "Invalid request body", err.Error())
+		response.ErrorValidation(c, err)
 		return
 	}
 
@@ -110,7 +110,7 @@ func (h *DormitoryHandler) UpdateDormitory(c *gin.Context) {
 
 	var req dto.UpdateDormitoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorBadRequest(c, "Invalid request body", err.Error())
+		response.ErrorValidation(c, err)
 		return
 	}
 
